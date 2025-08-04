@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: bitnami/postgresql:latest
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=aw4ys
+      - POSTGRES_PASSWORD=aw4ys
+      - POSTGRES_DB=aw4ys-wear
+    volumes:
+      - postgres_data:/bitnami/postgresql
+
+volumes:
+  postgres_data:
