@@ -2,6 +2,7 @@ import { desc } from "drizzle-orm";
 import Image from "next/image";
 
 import { CategorySelector } from "@/_components/common/category-select";
+import { Footer } from "@/_components/common/footer";
 import { Header } from "@/_components/common/header";
 import { ProductList } from "@/_components/common/product-list";
 import { db } from "@/db";
@@ -53,6 +54,10 @@ export default async function Home() {
             className="h-auto w-full"
           />
         </div>
+
+        <ProductList products={newlyCreatedProducts} title="Novos produtos" />
+
+        <Footer />
       </div>
     </>
   );
