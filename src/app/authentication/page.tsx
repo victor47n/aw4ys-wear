@@ -1,3 +1,4 @@
+import { Header } from "@/_components/common/header";
 import {
   Tabs,
   TabsContent,
@@ -10,20 +11,23 @@ import SignUpForm from "./_components/sign-up-form";
 
 const AuthenticationPage = async () => {
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-6 sm:h-screen">
-      <Tabs defaultValue="sign-in">
-        <TabsList>
-          <TabsTrigger value="sign-in">Entrar</TabsTrigger>
-          <TabsTrigger value="sign-up">Criar conta</TabsTrigger>
-        </TabsList>
-        <TabsContent value="sign-in">
-          <SignInForm />
-        </TabsContent>
-        <TabsContent value="sign-up">
-          <SignUpForm />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <>
+      <Header />
+      <div className="flex w-full flex-col items-center justify-center gap-6 p-5">
+        <Tabs defaultValue="sign-in" className="w-full">
+          <TabsList>
+            <TabsTrigger value="sign-in">Entrar</TabsTrigger>
+            <TabsTrigger value="sign-up">Criar conta</TabsTrigger>
+          </TabsList>
+          <TabsContent value="sign-in" className="w-full">
+            <SignInForm />
+          </TabsContent>
+          <TabsContent value="sign-up" className="w-full">
+            <SignUpForm />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 };
 
