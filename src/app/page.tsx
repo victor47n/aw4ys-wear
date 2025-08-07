@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import Image from "next/image";
 
-import { CategorySelector } from "@/_components/common/category-select";
+import { CategorySelector } from "@/_components/common/category-selector";
 import { Footer } from "@/_components/common/footer";
 import { Header } from "@/_components/common/header";
 import { ProductList } from "@/_components/common/product-list";

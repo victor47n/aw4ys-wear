@@ -243,8 +243,11 @@ const productImages = {
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
+    .normalize("NFD") // Separa os acentos das letras
+    .replace(/[\u0300-\u036f]/g, "") // Remove os diacríticos (acentos)
+    .replace(/[^a-z0-9\s-]/g, "") // Remove qualquer outro caractere especial
+    .replace(/\s+/g, "-") // Substitui espaços por hífen
+    .replace(/-+/g, "-") // Remove hífens duplicados
     .trim();
 }
 
