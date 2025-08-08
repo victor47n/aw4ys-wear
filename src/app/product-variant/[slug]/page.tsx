@@ -9,7 +9,7 @@ import { formatCentsToBRL } from "@/_helpers/money";
 import { db } from "@/db";
 import { productsTable, productVariantsTable } from "@/db/schema";
 
-import ProductActions from "./_components/product-actions";
+import { ProductActions } from "./_components/product-actions";
 import { VariantSelector } from "./_components/variant-selector";
 
 interface ProductVariantPageProps {

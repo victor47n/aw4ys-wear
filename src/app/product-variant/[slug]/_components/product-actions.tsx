@@ -5,13 +5,13 @@ import { useState } from "react";
 
 import { Button } from "@/_components/ui/button";
 
-import AddToCartButton from "./add-to-cart-button";
+import { AddToCartButton } from "./add-to-cart-button";
 
 interface ProductActionsProps {
   productVariantId: string;
 }
 
-const ProductActions = ({ productVariantId }: ProductActionsProps) => {
+export const ProductActions = ({ productVariantId }: ProductActionsProps) => {
   const [quantity, setQuantity] = useState(1);
 
   const handleDecrement = () => {
@@ -39,7 +39,10 @@ const ProductActions = ({ productVariantId }: ProductActionsProps) => {
         </div>
       </div>
       <div className="flex flex-col space-y-4 px-5">
-        <AddToCartButton />
+        <AddToCartButton
+          productVariantId={productVariantId}
+          quantity={quantity}
+        />
         <Button className="rounded-full" size="lg">
           Comprar agora
         </Button>
@@ -47,5 +50,3 @@ const ProductActions = ({ productVariantId }: ProductActionsProps) => {
     </>
   );
 };
-
-export default ProductActions;
