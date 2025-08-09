@@ -22,9 +22,9 @@ import {
   FormMessage,
 } from "@/_components/ui/form";
 import { Input } from "@/_components/ui/input";
-import { Label } from "@/_components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/_components/ui/radio-group";
 import { useCreateShippingAddress } from "@/_hooks/mutations/use-create-shipping-address";
+import { useUserAddresses } from "@/_hooks/queries/use-user-addresses";
 
 const addressFormSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
@@ -45,6 +45,7 @@ type AddressFormSchema = z.infer<typeof addressFormSchema>;
 export const Addresses = () => {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const createShippingAddressMutation = useCreateShippingAddress();
+  const { data: addresses, isLoading } = useUserAddresses();
 
   const form = useForm<AddressFormSchema>({
     resolver: zodResolver(addressFormSchema),
@@ -72,12 +73,37 @@ export const Addresses = () => {
     };
   };
 
+  const formatAddress = (address: NonNullable<typeof addresses>[0]) => {
+    const formatCpf = (cpf: string) => {
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    };
+
+    const formatPhone = (phone: string) => {
+      if (phone.length === 11) {
+        return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+      }
+      return phone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    };
+
+    const formatZipCode = (zipCode: string) => {
+      return zipCode.replace(/(\d{5})(\d{3})/, "$1-$2");
+    };
+
+    return {
+      ...address,
+      cpfOrCnpj: formatCpf(address.cpfOrCnpj),
+      phone: formatPhone(address.phone),
+      zipCode: formatZipCode(address.zipCode),
+    };
+  };
+
   const onSubmit = async (values: AddressFormSchema) => {
     try {
       const cleanedValues = removeMasks(values);
       await createShippingAddressMutation.mutateAsync(cleanedValues);
       toast.success("Endereço criado com sucesso!");
       form.reset();
+      setSelectedAddress(null);
     } catch (error) {
       toast.error("Erro ao criar endereço. Tente novamente.");
       console.error("Error creating address:", error);
@@ -90,18 +116,43 @@ export const Addresses = () => {
         <CardTitle>Identificação</CardTitle>
       </CardHeader>
       <CardContent>
-        <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress}>
-          <Card>
-            <CardContent>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="add_new" />
-                <Label htmlFor="add_new" className="font-medium">
-                  Adicionar novo endereço
-                </Label>
-              </div>
-            </CardContent>
-          </Card>
-        </RadioGroup>
+        {isLoading ? (
+          <div className="py-4 text-center">Carregando endereços...</div>
+        ) : (
+          <RadioGroup
+            value={selectedAddress}
+            onValueChange={setSelectedAddress}
+          >
+            {addresses?.map((address) => {
+              const formattedAddress = formatAddress(address);
+              const addressSummary = `${formattedAddress.street}, ${formattedAddress.number}${formattedAddress.complement ? `, ${formattedAddress.complement}` : ""}, ${formattedAddress.neighborhood}...`;
+
+              return (
+                <Card key={address.id}>
+                  <CardContent>
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value={address.id} />
+                      <div className="flex-1">
+                        <div className="text-sm">{addressSummary}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            <Card>
+              <CardContent>
+                <div className="flex items-center space-x-3">
+                  <RadioGroupItem value="add_new" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Adicionar novo</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </RadioGroup>
+        )}
 
         {selectedAddress === "add_new" && (
           <div className="mt-6">
