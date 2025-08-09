@@ -24,6 +24,7 @@ import {
 import { Input } from "@/_components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/_components/ui/radio-group";
 import { useCreateShippingAddress } from "@/_hooks/mutations/use-create-shipping-address";
+import { useUpdateCartShippingAddress } from "@/_hooks/mutations/use-update-cart-shipping-address";
 import { useUserAddresses } from "@/_hooks/queries/use-user-addresses";
 import type { shippingAddressTable } from "@/db/schema";
 
@@ -45,11 +46,18 @@ type AddressFormSchema = z.infer<typeof addressFormSchema>;
 
 interface AddressesProps {
   shippingAddresses: (typeof shippingAddressTable.$inferSelect)[];
+  defaultShippingAddressId: string | null;
 }
 
-export const Addresses = ({ shippingAddresses }: AddressesProps) => {
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+export const Addresses = ({
+  shippingAddresses,
+  defaultShippingAddressId,
+}: AddressesProps) => {
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(
+    defaultShippingAddressId || null,
+  );
   const createShippingAddressMutation = useCreateShippingAddress();
+  const updateCartShippingAddressMutation = useUpdateCartShippingAddress();
   const { data: addresses, isLoading } = useUserAddresses({
     initialData: shippingAddresses,
   });
@@ -107,13 +115,36 @@ export const Addresses = ({ shippingAddresses }: AddressesProps) => {
   const onSubmit = async (values: AddressFormSchema) => {
     try {
       const cleanedValues = removeMasks(values);
-      await createShippingAddressMutation.mutateAsync(cleanedValues);
+      const newAddress =
+        await createShippingAddressMutation.mutateAsync(cleanedValues);
       toast.success("Endereço criado com sucesso!");
       form.reset();
-      setSelectedAddress(null);
+      setSelectedAddress(newAddress.id);
+
+      await updateCartShippingAddressMutation.mutateAsync({
+        shippingAddressId: newAddress.id,
+      });
     } catch (error) {
       toast.error("Erro ao criar endereço. Tente novamente.");
       console.error("Error creating address:", error);
+    }
+  };
+
+  const handleContinueWithPayment = async () => {
+    if (!selectedAddress || selectedAddress === "add_new") {
+      toast.error("Selecione um endereço para continuar");
+      return;
+    }
+
+    try {
+      await updateCartShippingAddressMutation.mutateAsync({
+        shippingAddressId: selectedAddress,
+      });
+      toast.success("Endereço atualizado no carrinho!");
+      // Aqui você pode navegar para próxima página
+    } catch (error) {
+      toast.error("Erro ao atualizar endereço do carrinho.");
+      console.error("Error updating cart address:", error);
     }
   };
 
@@ -335,12 +366,28 @@ export const Addresses = ({ shippingAddresses }: AddressesProps) => {
                 >
                   {createShippingAddressMutation.isPending
                     ? "Criando endereço..."
-                    : "Continuar com o pagamento"}
+                    : "Criar endereço"}
                 </Button>
               </form>
             </Form>
           </div>
         )}
+
+        <div className="mt-6">
+          <Button
+            onClick={handleContinueWithPayment}
+            className="w-full"
+            disabled={
+              !selectedAddress ||
+              selectedAddress === "add_new" ||
+              updateCartShippingAddressMutation.isPending
+            }
+          >
+            {updateCartShippingAddressMutation.isPending
+              ? "Atualizando carrinho..."
+              : "Continuar com o pagamento"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
