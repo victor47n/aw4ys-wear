@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/_components/ui/button";
@@ -23,11 +24,12 @@ import {
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/_components/ui/radio-group";
+import { useCreateShippingAddress } from "@/_hooks/mutations/use-create-shipping-address";
 
 const addressFormSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
   recipientName: z.string().min(1, "Nome completo é obrigatório"),
-  cpf: z.string().min(14, "CPF é obrigatório"),
+  cpfOrCnpj: z.string().min(14, "CPF é obrigatório"),
   phone: z.string().min(15, "Celular é obrigatório"),
   zipCode: z.string().min(9, "CEP é obrigatório"),
   street: z.string().min(1, "Endereço é obrigatório"),
@@ -42,13 +44,14 @@ type AddressFormSchema = z.infer<typeof addressFormSchema>;
 
 export const Addresses = () => {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const createShippingAddressMutation = useCreateShippingAddress();
 
   const form = useForm<AddressFormSchema>({
     resolver: zodResolver(addressFormSchema),
     defaultValues: {
       email: "",
       recipientName: "",
-      cpf: "",
+      cpfOrCnpj: "",
       phone: "",
       zipCode: "",
       street: "",
@@ -60,8 +63,25 @@ export const Addresses = () => {
     },
   });
 
+  const removeMasks = (values: AddressFormSchema) => {
+    return {
+      ...values,
+      cpfOrCnpj: values.cpfOrCnpj.replace(/[^\d]/g, ""),
+      phone: values.phone.replace(/[^\d]/g, ""),
+      zipCode: values.zipCode.replace(/[^\d]/g, ""),
+    };
+  };
+
   const onSubmit = async (values: AddressFormSchema) => {
-    console.log("Form values:", values);
+    try {
+      const cleanedValues = removeMasks(values);
+      await createShippingAddressMutation.mutateAsync(cleanedValues);
+      toast.success("Endereço criado com sucesso!");
+      form.reset();
+    } catch (error) {
+      toast.error("Erro ao criar endereço. Tente novamente.");
+      console.error("Error creating address:", error);
+    }
   };
 
   return (
@@ -119,7 +139,7 @@ export const Addresses = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="cpf"
+                    name="cpfOrCnpj"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -250,8 +270,14 @@ export const Addresses = () => {
                   />
                 </div>
 
-                <Button type="submit" className="mt-6 w-full">
-                  Continuar com o pagamento
+                <Button
+                  type="submit"
+                  className="mt-6 w-full"
+                  disabled={createShippingAddressMutation.isPending}
+                >
+                  {createShippingAddressMutation.isPending
+                    ? "Criando endereço..."
+                    : "Continuar com o pagamento"}
                 </Button>
               </form>
             </Form>
