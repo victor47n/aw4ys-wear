@@ -3,6 +3,7 @@ import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
+import { addProductToCart } from "@/_actions/add-cart-product";
 import { decreaseCartProductQuantity } from "@/_actions/decrease-cart-product-quantity";
 import { removeProductFromCart } from "@/_actions/remove-cart-product";
 import { formatCentsToBRL } from "@/_helpers/money";
@@ -12,6 +13,7 @@ import { Button } from "../ui/button";
 interface CartItemProps {
   id: string;
   productName: string;
+  productVariantId: string;
   productVariantName: string;
   productVariantImageUrl: string;
   productVariantPriceInCents: number;
@@ -21,6 +23,7 @@ interface CartItemProps {
 export const CartItem = ({
   id,
   productName,
+  productVariantId,
   productVariantName,
   productVariantImageUrl,
   productVariantPriceInCents,
@@ -34,9 +37,19 @@ export const CartItem = ({
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
+
   const decreaseCartProductQuantityMutation = useMutation({
     mutationKey: ["remove-cart-product"],
     mutationFn: () => decreaseCartProductQuantity({ cartItemId: id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+  });
+
+  const increaseCartProductQuantityMutation = useMutation({
+    mutationKey: ["increase-cart-product-quantity"],
+    mutationFn: () =>
+      addProductToCart({ productVariantId: productVariantId, quantity: 1 }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
@@ -54,9 +67,17 @@ export const CartItem = ({
   };
 
   const handleDecreaseQuantityClick = () => {
-    removeProductFromCartMutation.mutate(undefined, {
+    decreaseCartProductQuantityMutation.mutate(undefined, {
       onError: (error) => {
-        toast.error("Erro ao remover produto do carrinho.");
+        toast.error("Erro ao diminuir a quantidade do produto no carrinho.");
+      },
+    });
+  };
+
+  const handleIncreaseQuantityClick = () => {
+    increaseCartProductQuantityMutation.mutate(undefined, {
+      onError: (error) => {
+        toast.error("Erro ao aumentar a quantidade do produto no carrinho.");
       },
     });
   };
@@ -85,7 +106,11 @@ export const CartItem = ({
               <MinusIcon />
             </Button>
             <p className="text-xs font-medium">{quantity}</p>
-            <Button className="h-4 w-4" variant="ghost" onClick={() => {}}>
+            <Button
+              className="h-4 w-4"
+              variant="ghost"
+              onClick={handleIncreaseQuantityClick}
+            >
               <PlusIcon />
             </Button>
           </div>
