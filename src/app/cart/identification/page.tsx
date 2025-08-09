@@ -34,11 +34,16 @@ const IdentificationPage = async () => {
     redirect("/");
   }
 
+  const shippingAddresses = await db.query.shippingAddressTable.findMany({
+    where: (address, { eq }) => eq(address.userId, session.user.id),
+    orderBy: (address, { desc }) => desc(address.createdAt),
+  });
+
   return (
     <>
       <Header />
       <div className="space-y-4 px-5">
-        <Addresses />
+        <Addresses shippingAddresses={shippingAddresses} />
       </div>
     </>
   );
