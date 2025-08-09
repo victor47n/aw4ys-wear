@@ -40,7 +40,7 @@ export const CartItem = ({
       onSuccess: () => {
         toast.success("Produto removido do carrinho!");
       },
-      onError: (error) => {
+      onError: () => {
         toast.error("Erro ao remover produto do carrinho.");
       },
     });
