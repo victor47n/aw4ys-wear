@@ -1,12 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
-import { addProductToCart } from "@/_actions/add-cart-product";
-import { decreaseCartProductQuantity } from "@/_actions/decrease-cart-product-quantity";
-import { removeProductFromCart } from "@/_actions/remove-cart-product";
 import { formatCentsToBRL } from "@/_helpers/money";
+import { useDecreaseCartProduct } from "@/_hooks/mutations/use-decrease-cart-product";
+import { useIncreaseCartProduct } from "@/_hooks/mutations/use-increase-cart-product";
+import { useRemoveProductFromCart } from "@/_hooks/mutations/use-remove-product-from-cart";
 
 import { Button } from "../ui/button";
 
@@ -29,31 +28,12 @@ export const CartItem = ({
   productVariantPriceInCents,
   quantity,
 }: CartItemProps) => {
-  const queryClient = useQueryClient();
-  const removeProductFromCartMutation = useMutation({
-    mutationKey: ["remove-cart-product"],
-    mutationFn: () => removeProductFromCart({ cartItemId: id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-  });
+  const removeProductFromCartMutation = useRemoveProductFromCart(id);
 
-  const decreaseCartProductQuantityMutation = useMutation({
-    mutationKey: ["remove-cart-product"],
-    mutationFn: () => decreaseCartProductQuantity({ cartItemId: id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-  });
+  const decreaseCartProductQuantityMutation = useDecreaseCartProduct(id);
 
-  const increaseCartProductQuantityMutation = useMutation({
-    mutationKey: ["increase-cart-product-quantity"],
-    mutationFn: () =>
-      addProductToCart({ productVariantId: productVariantId, quantity: 1 }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-  });
+  const increaseCartProductQuantityMutation =
+    useIncreaseCartProduct(productVariantId);
 
   const handleRemoveProduct = () => {
     removeProductFromCartMutation.mutate(undefined, {
@@ -68,7 +48,7 @@ export const CartItem = ({
 
   const handleDecreaseQuantityClick = () => {
     decreaseCartProductQuantityMutation.mutate(undefined, {
-      onError: (error) => {
+      onError: () => {
         toast.error("Erro ao diminuir a quantidade do produto no carrinho.");
       },
     });
@@ -76,7 +56,7 @@ export const CartItem = ({
 
   const handleIncreaseQuantityClick = () => {
     increaseCartProductQuantityMutation.mutate(undefined, {
-      onError: (error) => {
+      onError: () => {
         toast.error("Erro ao aumentar a quantidade do produto no carrinho.");
       },
     });
