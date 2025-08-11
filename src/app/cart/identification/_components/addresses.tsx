@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
@@ -53,6 +54,7 @@ export const Addresses = ({
   shippingAddresses,
   defaultShippingAddressId,
 }: AddressesProps) => {
+  const router = useRouter();
   const [selectedAddress, setSelectedAddress] = useState<string | null>(
     defaultShippingAddressId || null,
   );
@@ -141,7 +143,7 @@ export const Addresses = ({
         shippingAddressId: selectedAddress,
       });
       toast.success("Endereço atualizado no carrinho!");
-      // Aqui você pode navegar para próxima página
+      router.push("/cart/confirmation");
     } catch (error) {
       toast.error("Erro ao atualizar endereço do carrinho.");
       console.error("Error updating cart address:", error);
