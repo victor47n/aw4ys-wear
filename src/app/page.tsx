@@ -5,22 +5,18 @@ import { CategorySelector } from "@/_components/common/category-selector";
 import { Footer } from "@/_components/common/footer";
 import { Header } from "@/_components/common/header";
 import { ProductList } from "@/_components/common/product-list";
-import { db } from "@/db";
-import { productsTable } from "@/db/schema";
+import { getCategories } from "@/_data/categories/get";
+import {
+  getNewlyCreatedProducts,
+  getProductsWithVariants,
+} from "@/_data/products/get";
 
 export default async function Home() {
-  const products = await db.query.productsTable.findMany({
-    with: {
-      variants: true,
-    },
-  });
-  const newlyCreatedProducts = await db.query.productsTable.findMany({
-    orderBy: [desc(productsTable.createdAt)],
-    with: {
-      variants: true,
-    },
-  });
-  const categories = await db.query.categoriesTable.findMany({});
+  const [products, newlyCreatedProducts, categories] = await Promise.all([
+    getProductsWithVariants(),
+    getNewlyCreatedProducts(),
+    getCategories(),
+  ]);
 
   return (
     <>
